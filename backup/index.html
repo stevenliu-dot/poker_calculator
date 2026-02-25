@@ -1,0 +1,2144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>德州扑克概率计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2em;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+        
+        .subtitle {
+            color: #ecf0f1;
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .calculator {
+            padding: 20px;
+        }
+        
+        .panel {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #3498db;
+            font-size: 1.2em;
+        }
+        
+        /* 紧凑的设置行 */
+        .settings-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .setting-item {
+            margin-bottom: 0;
+        }
+        
+        .setting-item label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #495057;
+            font-size: 0.9em;
+        }
+        
+        .setting-item select, .setting-item input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 0;
+            height: 36px;
+        }
+        
+        .setting-item select:focus, .setting-item input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .small-text {
+            font-size: 0.8em;
+            color: #6c757d;
+            margin-top: 3px;
+        }
+        
+        .info-text {
+            padding: 8px;
+            background: #e8f4f8;
+            border-radius: 4px;
+            border-left: 3px solid #3498db;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+        
+        /* 手牌设置区域 */
+        .hand-settings {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .player-hand-row {
+            display: grid;
+            grid-template-columns: 100px 1fr auto;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .player-label {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        
+        .hand-display {
+            font-family: monospace;
+            font-size: 14px;
+            min-height: 20px;
+            color: #27ae60;
+            padding: 5px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .hand-display.empty {
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .card-display {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        
+        .hand-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        /* 公共牌区域 */
+        .board-settings {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            margin-top: 15px;
+        }
+        
+        .board-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+            min-height: 50px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px dashed #ddd;
+            align-items: center;
+        }
+        
+        .board-card {
+            width: 40px;
+            height: 60px;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .board-empty {
+            color: #95a5a6;
+            font-style: italic;
+            padding: 10px;
+        }
+        
+        /* 紧凑按钮样式 */
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-random {
+            background: #9b59b6;
+            color: white;
+            padding: 6px 8px;
+        }
+        
+        .btn-random:hover {
+            background: #8e44ad;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #229954;
+        }
+        
+        /* 手牌选择器模态框 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        .modal-title {
+            font-size: 1.3em;
+            color: #2c3e50;
+        }
+        
+        .modal-close {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        /* 牌堆网格样式 - 新增 */
+        .board-card-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .card-grid-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        
+        .card-grid-btn {
+            padding: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 70px;
+        }
+        
+        .card-grid-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .card-grid-btn.selected {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+        }
+        
+        .card-grid-btn.used:not(.selected) {
+            background: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+        }
+        
+        .card-rank-lg {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .card-suit-lg {
+            font-size: 24px;
+            margin-top: 2px;
+        }
+        /* 牌堆网格样式结束 */
+        
+        .quick-hands-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .quick-hand-btn {
+            padding: 10px 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            color: white;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .quick-hand-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .premium-hand {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .good-hand {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+        
+        .speculative-hand {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+        
+        .hand-type-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #6c757d;
+            margin: 15px 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .hand-type-label::before {
+            content: "";
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            margin-right: 5px;
+        }
+        
+        .hand-type-label.premium::before {
+            background: #e74c3c;
+        }
+        
+        .hand-type-label.good::before {
+            background: #3498db;
+        }
+        
+        .hand-type-label.speculative::before {
+            background: #2ecc71;
+        }
+        
+        .card-picker {
+            margin-top: 20px;
+        }
+        
+        .card-selection {
+            margin-bottom: 15px;
+        }
+        
+        .card-selection h4 {
+            margin-bottom: 8px;
+            color: #495057;
+            font-size: 14px;
+        }
+        
+        .rank-buttons, .suit-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .rank-btn, .suit-btn {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .rank-btn:disabled, .suit-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .rank-btn:hover:not(:disabled), .suit-btn:hover:not(:disabled) {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        
+        .rank-btn.selected:not(:disabled), .suit-btn.selected:not(:disabled) {
+            background: #2c3e50;
+            color: white;
+            border-color: #2c3e50;
+        }
+        
+        .available-cards {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+        
+        .available-cards h4 {
+            margin-bottom: 10px;
+            color: #495057;
+            font-size: 14px;
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            gap: 5px;
+        }
+        
+        .card-item {
+            padding: 5px;
+            text-align: center;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            border: 1px solid #ddd;
+            background: white;
+        }
+        
+        .card-item.used {
+            background: #e74c3c;
+            color: white;
+            opacity: 0.5;
+        }
+        
+        .card-item.available {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .hand-preview {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px dashed #3498db;
+        }
+        
+        .preview-cards {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .preview-card {
+            width: 60px;
+            height: 85px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .card-rank {
+            font-size: 22px;
+            margin-bottom: 3px;
+        }
+        
+        .card-suit {
+            font-size: 20px;
+        }
+        
+        .hand-code {
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 10px 0;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        .modal-footer {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        /* 控制按钮区域 */
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .control-buttons .btn {
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+        
+        /* 示例按钮 */
+        .examples {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .example-btn {
+            padding: 6px 12px;
+            background: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: background 0.2s;
+        }
+        
+        .example-btn:hover {
+            background: #7f8c8d;
+        }
+        
+        /* 结果面板 */
+        .results-panel {
+            display: none;
+            margin-top: 20px;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .player-result {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .player-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+        
+        .player-hand {
+            font-family: monospace;
+            font-size: 1em;
+            color: #495057;
+        }
+        
+        .equity-bar {
+            height: 30px;
+            background: #ecf0f1;
+            border-radius: 15px;
+            margin: 10px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            border-radius: 15px;
+            min-width: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 15px;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            transition: width 0.5s ease-out;
+        }
+        
+        .player-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .stat {
+            text-align: center;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .stat-label {
+            display: block;
+            color: #6c757d;
+            font-size: 0.8em;
+            margin-bottom: 3px;
+        }
+        
+        .stat-value {
+            display: block;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        
+        .win { color: #27ae60; }
+        .tie { color: #f39c12; }
+        .equity { color: #3498db; }
+        
+        footer {
+            text-align: center;
+            padding: 15px;
+            background: #2c3e50;
+            color: white;
+            margin-top: 20px;
+            font-size: 0.8em;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #f5c6cb;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ffeaa7;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 10px;
+            }
+            
+            .settings-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .player-hand-row {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .player-label {
+                text-align: center;
+            }
+            
+            .control-buttons {
+                flex-direction: column;
+            }
+            
+            .player-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-hands-grid {
+                grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            }
+            
+            .modal-content {
+                width: 95%;
+                padding: 15px;
+            }
+            
+            .card-grid-btn {
+                min-height: 60px;
+                padding: 8px 0;
+            }
+        }
+        
+        /* 消息提示 */
+        .message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+            font-size: 12px;
+        }
+        
+        .message-success {
+            background: linear-gradient(135deg, #27ae60, #229954);
+        }
+        
+        .message-error {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .message-info {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+        
+        .message-warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>♠️♥️♦️♣️ 德州扑克概率计算器</h1>
+            <p class="subtitle">蒙特卡洛模拟计算手牌胜率 - 学习GTO策略</p>
+        </header>
+        
+        <div class="calculator">
+            <!-- 游戏设置（紧凑版） -->
+            <div class="panel">
+                <h2>⚙️ 游戏设置</h2>
+                <div class="settings-row">
+                    <div class="setting-item">
+                        <label for="num_players">👥 玩家数量</label>
+                        <select id="num_players">
+                            <option value="2">2人</option>
+                            <option value="3">3人</option>
+                            <option value="4">4人</option>
+                            <option value="5">5人</option>
+                            <option value="6" selected>6人</option>
+                            <option value="7">7人</option>
+                            <option value="8">8人</option>
+                            <option value="9">9人</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label for="stage">🎯 游戏阶段</label>
+                        <select id="stage">
+                            <option value="preflop" selected>翻牌前</option>
+                            <option value="flop">翻牌圈</option>
+                            <option value="turn">转牌圈</option>
+                            <option value="river">河牌圈</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label for="simulations">🔢 模拟次数</label>
+                        <select id="simulations">
+                            <option value="1000">1千次</option>
+                            <option value="5000">5千次</option>
+                            <option value="10000" selected>1万次</option>
+                            <option value="50000">5万次</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="info-text" id="stage-info">
+                    <strong>翻牌前阶段：</strong> 无需设置公共牌，点击下方"设置玩家手牌"开始。
+                </div>
+            </div>
+            
+            <!-- 手牌设置（整合版） -->
+            <div class="panel hand-settings">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2>🎴 玩家手牌设置</h2>
+                    <div>
+                        <button onclick="randomAllHands()" class="btn btn-random">🎲 全部随机</button>
+                        <button onclick="clearAllHands()" class="btn btn-secondary">🗑️ 清空</button>
+                    </div>
+                </div>
+                
+                <div id="hands-container">
+                    <!-- 玩家手牌行动态生成 -->
+                </div>
+            </div>
+            
+            <!-- 公共牌设置（放在手牌后面） -->
+            <div class="panel board-settings">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2>🃏 公共牌设置</h2>
+                    <button onclick="openBoardPicker()" class="btn btn-primary" id="board-picker-btn">
+                        ✏️ 设置公共牌
+                    </button>
+                </div>
+                
+                <div class="info-text" id="board-info">
+                    请先完成玩家手牌设置，然后点击"设置公共牌"按钮。
+                </div>
+                
+                <div class="board-display" id="board-display">
+                    <div class="board-empty">暂无公共牌</div>
+                </div>
+                
+                <div class="small-text">
+                    当前阶段：<span id="current-stage">翻牌前</span> | 
+                    需要牌数：<span id="required-cards">0</span> | 
+                    已设置：<span id="current-cards">0</span>
+                </div>
+            </div>
+            
+            <!-- 示例牌局 -->
+            <div class="panel">
+                <h2>💡 快速示例</h2>
+                <div class="examples">
+                    <button class="example-btn" onclick="loadExample(['AsKs', 'QdQc'], 'preflop', '')">
+                        AKs vs QQ（翻牌前）
+                    </button>
+                    <button class="example-btn" onclick="loadExample(['AhAd', 'KsKh'], 'preflop', '')">
+                        AA vs KK（翻牌前）
+                    </button>
+                    <button class="example-btn" onclick="loadExample(['AsKs', 'QdQc'], 'flop', 'Ah9c2d')">
+                        AK vs QQ（翻牌圈）
+                    </button>
+                    <button class="example-btn" onclick="loadExample(['JhTh', 'AsKs', 'QdQc'], 'preflop', '')">
+                        3人混战
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 控制按钮 -->
+            <div class="control-buttons">
+                <button onclick="calculateOdds()" class="btn btn-primary">🧮 计算概率</button>
+                <button onclick="resetCalculator()" class="btn btn-secondary">🔄 重置所有</button>
+            </div>
+            
+            <!-- 结果面板 -->
+            <div id="results" class="panel results-panel">
+                <h2>📊 计算结果</h2>
+                <div id="results-content">
+                    <!-- 结果动态显示 -->
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2024 德州扑克概率计算器 | 仅供学习GTO策略使用 | 禁止用于赌博</p>
+            <p>模拟次数: <span id="current_sims">10,000</span> | 计算时间: <span id="calc_time">-</span>秒</p>
+        </footer>
+    </div>
+    
+    <!-- 手牌选择器模态框 -->
+    <div id="handPickerModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">选择手牌 - 玩家 <span id="modal-player-num">1</span></div>
+                <button class="modal-close" onclick="closeHandPicker()">✕ 关闭</button>
+            </div>
+            
+            <div class="available-cards">
+                <h4>🃏 可用牌堆（已用 <span id="used-cards-count">0</span>/52）</h4>
+                <div class="cards-grid" id="cards-grid">
+                    <!-- 牌堆显示动态生成 -->
+                </div>
+            </div>
+            
+            <!-- 快速手牌选择 -->
+            <div class="hand-type-label premium">高级牌（Premium）</div>
+            <div class="quick-hands-grid">
+                <button class="quick-hand-btn premium-hand" data-hand="AA">AA</button>
+                <button class="quick-hand-btn premium-hand" data-hand="KK">KK</button>
+                <button class="quick-hand-btn premium-hand" data-hand="QQ">QQ</button>
+                <button class="quick-hand-btn premium-hand" data-hand="JJ">JJ</button>
+                <button class="quick-hand-btn premium-hand" data-hand="AKs">AKs</button>
+                <button class="quick-hand-btn premium-hand" data-hand="AKo">AKo</button>
+                <button class="quick-hand-btn premium-hand" data-hand="AQs">AQs</button>
+            </div>
+            
+            <div class="hand-type-label good">优质牌（Good）</div>
+            <div class="quick-hands-grid">
+                <button class="quick-hand-btn good-hand" data-hand="TT">TT</button>
+                <button class="quick-hand-btn good-hand" data-hand="99">99</button>
+                <button class="quick-hand-btn good-hand" data-hand="AJs">AJs</button>
+                <button class="quick-hand-btn good-hand" data-hand="KQs">KQs</button>
+                <button class="quick-hand-btn good-hand" data-hand="ATs">ATs</button>
+            </div>
+            
+            <div class="hand-type-label speculative">投机牌（Speculative）</div>
+            <div class="quick-hands-grid">
+                <button class="quick-hand-btn speculative-hand" data-hand="88">88</button>
+                <button class="quick-hand-btn speculative-hand" data-hand="77">77</button>
+                <button class="quick-hand-btn speculative-hand" data-hand="KJs">KJs</button>
+                <button class="quick-hand-btn speculative-hand" data-hand="QJs">QJs</button>
+                <button class="quick-hand-btn speculative-hand" data-hand="JTs">JTs</button>
+            </div>
+            
+            <!-- 手动选择 -->
+            <div class="card-picker">
+                <div class="card-selection">
+                    <h4>第一张牌</h4>
+                    <div class="rank-buttons">
+                        <button class="rank-btn" data-rank="A">A</button>
+                        <button class="rank-btn" data-rank="K">K</button>
+                        <button class="rank-btn" data-rank="Q">Q</button>
+                        <button class="rank-btn" data-rank="J">J</button>
+                        <button class="rank-btn" data-rank="T">T</button>
+                        <button class="rank-btn" data-rank="9">9</button>
+                        <button class="rank-btn" data-rank="8">8</button>
+                        <button class="rank-btn" data-rank="7">7</button>
+                        <button class="rank-btn" data-rank="6">6</button>
+                        <button class="rank-btn" data-rank="5">5</button>
+                        <button class="rank-btn" data-rank="4">4</button>
+                        <button class="rank-btn" data-rank="3">3</button>
+                        <button class="rank-btn" data-rank="2">2</button>
+                    </div>
+                    <div class="suit-buttons" style="margin-top: 10px;">
+                        <button class="suit-btn" data-suit="h">♥ Hearts</button>
+                        <button class="suit-btn" data-suit="d">♦ Diamonds</button>
+                        <button class="suit-btn" data-suit="c">♣ Clubs</button>
+                        <button class="suit-btn" data-suit="s">♠ Spades</button>
+                    </div>
+                </div>
+                
+                <div class="card-selection">
+                    <h4>第二张牌</h4>
+                    <div class="rank-buttons">
+                        <button class="rank-btn" data-rank="A">A</button>
+                        <button class="rank-btn" data-rank="K">K</button>
+                        <button class="rank-btn" data-rank="Q">Q</button>
+                        <button class="rank-btn" data-rank="J">J</button>
+                        <button class="rank-btn" data-rank="T">T</button>
+                        <button class="rank-btn" data-rank="9">9</button>
+                        <button class="rank-btn" data-rank="8">8</button>
+                        <button class="rank-btn" data-rank="7">7</button>
+                        <button class="rank-btn" data-rank="6">6</button>
+                        <button class="rank-btn" data-rank="5">5</button>
+                        <button class="rank-btn" data-rank="4">4</button>
+                        <button class="rank-btn" data-rank="3">3</button>
+                        <button class="rank-btn" data-rank="2">2</button>
+                    </div>
+                    <div class="suit-buttons" style="margin-top: 10px;">
+                        <button class="suit-btn" data-suit="h">♥ Hearts</button>
+                        <button class="suit-btn" data-suit="d">♦ Diamonds</button>
+                        <button class="suit-btn" data-suit="c">♣ Clubs</button>
+                        <button class="suit-btn" data-suit="s">♠ Spades</button>
+                    </div>
+                </div>
+                
+                <!-- 预览 -->
+                <div class="hand-preview">
+                    <h4>手牌预览</h4>
+                    <div class="preview-cards">
+                        <div class="preview-card" id="modal-card1-preview">
+                            <div class="card-rank">A</div>
+                            <div class="card-suit">♠</div>
+                        </div>
+                        <div class="preview-card" id="modal-card2-preview">
+                            <div class="card-rank">K</div>
+                            <div class="card-suit">♠</div>
+                        </div>
+                    </div>
+                    <div class="hand-code" id="modal-hand-code">AsKs</div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeHandPicker()">取消</button>
+                <button class="btn btn-success" id="modal-apply-btn">✅ 应用此手牌</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 公共牌选择器模态框（简化版） -->
+    <div id="boardPickerModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <div class="modal-title">设置公共牌 - <span id="board-stage">翻牌圈</span></div>
+                <button class="modal-close" onclick="closeBoardPicker()">✕ 关闭</button>
+            </div>
+            
+            <div class="info-text" id="board-require-info" style="margin: 15px 0;">
+                当前阶段需要 <span id="board-required-count">3</span> 张公共牌，已选择 <span id="board-selected-count">0</span> 张。
+            </div>
+            
+            <!-- 公共牌显示 -->
+            <div class="board-display" style="margin: 20px 0; min-height: 80px;" id="board-picker-display">
+                <div class="board-empty">请从下方牌堆中选择公共牌</div>
+            </div>
+            
+            <!-- 牌堆选择 -->
+            <div class="available-cards">
+                <h4>🃏 可用牌堆（已用 <span id="board-used-cards-count">0</span>/52）</h4>
+                <div class="board-card-grid" id="board-cards-grid">
+                    <!-- 牌堆动态生成 -->
+                </div>
+            </div>
+            
+            <!-- 快速选择 -->
+            <div style="margin-top: 20px;">
+                <h4 style="margin-bottom: 10px; color: #495057;">常用翻牌面（一键选择）</h4>
+                <div class="examples">
+                    <button class="example-btn" onclick="applyQuickBoard('AhKdQc')">A♥K♦Q♣</button>
+                    <button class="example-btn" onclick="applyQuickBoard('AsTs9h')">A♠T♠9♥</button>
+                    <button class="example-btn" onclick="applyQuickBoard('JhTh9d')">J♥T♥9♦</button>
+                    <button class="example-btn" onclick="applyQuickBoard('7s8s9s')">7♠8♠9♠</button>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-danger" onclick="clearBoardSelection()">🗑️ 清空选择</button>
+                <button class="btn btn-secondary" onclick="closeBoardPicker()">取消</button>
+                <button class="btn btn-success" id="board-apply-btn">✅ 应用公共牌</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ============ 全局状态管理 ============
+        let usedCards = new Set(); // 已使用的牌（玩家手牌+公共牌）
+        let playerHands = {}; // 玩家手牌存储 {玩家编号: 手牌代码}
+        let boardCards = []; // 公共牌存储 [牌1, 牌2, ...]
+        
+        // 手牌选择器状态
+        let currentEditingPlayer = 1;
+        let modalCard1 = { rank: 'A', suit: 's' };
+        let modalCard2 = { rank: 'K', suit: 's' };
+        
+        // 公共牌选择器状态
+        let boardSelection = [];
+        
+        // ============ 初始化页面 ============
+        function initializePage() {
+            initializeHands();
+            updateSimulationsDisplay();
+            updateStageInfo();
+            updateUsedCardsDisplay();
+            updateBoardUsedCardsDisplay();
+            
+            // 监听变化
+            document.getElementById('num_players').addEventListener('change', function() {
+                initializeHands();
+                updateUsedCardsDisplay();
+                updateBoardUsedCardsDisplay();
+            });
+            
+            document.getElementById('stage').addEventListener('change', updateStageInfo);
+            document.getElementById('simulations').addEventListener('change', updateSimulationsDisplay);
+            
+            // 初始化模态框
+            initializeHandPickerModal();
+            initializeBoardPickerModal();
+            
+            // 禁用公共牌按钮直到设置手牌
+            updateBoardButtonState();
+        }
+        
+        // ============ 手牌管理 ============
+        function initializeHands() {
+            const container = document.getElementById('hands-container');
+            const numPlayers = parseInt(document.getElementById('num_players').value);
+            container.innerHTML = '';
+            
+            for (let i = 1; i <= numPlayers; i++) {
+                const handRow = document.createElement('div');
+                handRow.className = 'player-hand-row';
+                handRow.innerHTML = `
+                    <div class="player-label">玩家 ${i}</div>
+                    <div class="hand-display empty" id="hand-display${i}">点击设置手牌</div>
+                    <div class="hand-buttons">
+                        <button class="btn btn-random" onclick="randomHand(${i})" title="随机手牌">
+                            🎲
+                        </button>
+                        <button class="btn btn-primary" onclick="openHandPicker(${i})" title="选择手牌">
+                            ✏️
+                        </button>
+                        <button class="btn btn-danger" onclick="clearHand(${i})" title="清空手牌">
+                            ✕
+                        </button>
+                    </div>
+                `;
+                container.appendChild(handRow);
+            }
+            
+            // 更新玩家手牌存储
+            for (let i = 1; i <= numPlayers; i++) {
+                if (!playerHands[i]) playerHands[i] = '';
+            }
+        }
+        
+        // ============ 手牌选择器 ============
+        function openHandPicker(playerNum) {
+            currentEditingPlayer = playerNum;
+            document.getElementById('modal-player-num').textContent = playerNum;
+            
+            // 加载当前手牌（如果有）
+            const currentHand = playerHands[playerNum];
+            if (currentHand && currentHand.length === 4) {
+                modalCard1 = { rank: currentHand[0], suit: currentHand[1] };
+                modalCard2 = { rank: currentHand[2], suit: currentHand[3] };
+            } else {
+                // 默认值
+                modalCard1 = { rank: 'A', suit: 's' };
+                modalCard2 = { rank: 'K', suit: 's' };
+            }
+            
+            // 更新显示
+            updateUsedCardsDisplay();
+            updateModalButtonStates();
+            updateModalPreview();
+            
+            // 显示模态框
+            document.getElementById('handPickerModal').style.display = 'flex';
+        }
+        
+        function closeHandPicker() {
+            document.getElementById('handPickerModal').style.display = 'none';
+        }
+        
+        function initializeHandPickerModal() {
+            // 绑定快速手牌按钮
+            document.querySelectorAll('.quick-hand-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const hand = this.getAttribute('data-hand');
+                    applyQuickHandToModal(hand);
+                });
+            });
+            
+            // 绑定牌面选择按钮
+            document.querySelectorAll('.rank-btn, .suit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (this.classList.contains('rank-btn')) {
+                        const rank = this.getAttribute('data-rank');
+                        const cardType = this.closest('.card-selection').querySelector('h4').textContent.includes('第一张') ? 1 : 2;
+                        selectModalRank(rank, cardType);
+                    } else {
+                        const suit = this.getAttribute('data-suit');
+                        const cardType = this.closest('.card-selection').querySelector('h4').textContent.includes('第一张') ? 1 : 2;
+                        selectModalSuit(suit, cardType);
+                    }
+                });
+            });
+            
+            // 绑定应用按钮
+            document.getElementById('modal-apply-btn').addEventListener('click', applyModalHandToPlayer);
+            
+            // 点击模态框外部关闭
+            document.getElementById('handPickerModal').addEventListener('click', function(e) {
+                if (e.target === this) closeHandPicker();
+            });
+        }
+        
+        function selectModalRank(rank, cardType) {
+            if (cardType === 1) {
+                modalCard1.rank = rank;
+            } else {
+                modalCard2.rank = rank;
+            }
+            updateModalButtonStates();
+            updateModalPreview();
+        }
+        
+        function selectModalSuit(suit, cardType) {
+            if (cardType === 1) {
+                modalCard1.suit = suit;
+            } else {
+                modalCard2.suit = suit;
+            }
+            updateModalButtonStates();
+            updateModalPreview();
+        }
+        
+        function updateModalButtonStates() {
+            // 更新牌面按钮状态
+            document.querySelectorAll('#handPickerModal .rank-btn, #handPickerModal .suit-btn').forEach(btn => {
+                if (btn.classList.contains('rank-btn')) {
+                    const rank = btn.getAttribute('data-rank');
+                    const cardType = btn.closest('.card-selection').querySelector('h4').textContent.includes('第一张') ? 1 : 2;
+                    const currentRank = cardType === 1 ? modalCard1.rank : modalCard2.rank;
+                    const cardCode = rank + (cardType === 1 ? modalCard1.suit : modalCard2.suit);
+                    
+                    btn.classList.toggle('selected', rank === currentRank);
+                    btn.disabled = usedCards.has(cardCode) && !btn.classList.contains('selected');
+                } else {
+                    const suit = btn.getAttribute('data-suit');
+                    const cardType = btn.closest('.card-selection').querySelector('h4').textContent.includes('第一张') ? 1 : 2;
+                    const currentSuit = cardType === 1 ? modalCard1.suit : modalCard2.suit;
+                    const cardCode = (cardType === 1 ? modalCard1.rank : modalCard2.rank) + suit;
+                    
+                    btn.classList.toggle('selected', suit === currentSuit);
+                    btn.disabled = usedCards.has(cardCode) && !btn.classList.contains('selected');
+                }
+            });
+            
+            // 更新快速手牌按钮状态
+            document.querySelectorAll('.quick-hand-btn').forEach(btn => {
+                const handCode = btn.getAttribute('data-hand');
+                const cards = parseHandCode(handCode);
+                const isDisabled = cards.some(card => usedCards.has(card));
+                btn.disabled = isDisabled;
+            });
+        }
+        
+        function updateModalPreview() {
+            const card1Element = document.getElementById('modal-card1-preview');
+            const card2Element = document.getElementById('modal-card2-preview');
+            const handCodeElement = document.getElementById('modal-hand-code');
+            
+            if (card1Element && card2Element && handCodeElement) {
+                // 更新牌面显示
+                card1Element.querySelector('.card-rank').textContent = modalCard1.rank;
+                card1Element.querySelector('.card-suit').textContent = getSuitSymbol(modalCard1.suit);
+                
+                card2Element.querySelector('.card-rank').textContent = modalCard2.rank;
+                card2Element.querySelector('.card-suit').textContent = getSuitSymbol(modalCard2.suit);
+                
+                // 更新手牌代码
+                const handCode = modalCard1.rank + modalCard1.suit + modalCard2.rank + modalCard2.suit;
+                handCodeElement.textContent = handCode;
+                
+                // 更新颜色
+                card1Element.style.background = getSuitColor(modalCard1.suit);
+                card2Element.style.background = getSuitColor(modalCard2.suit);
+            }
+        }
+        
+        function applyQuickHandToModal(handCode) {
+            const cards = parseHandCode(handCode);
+            if (cards.length === 2) {
+                modalCard1 = parseCardCode(cards[0]);
+                modalCard2 = parseCardCode(cards[1]);
+                updateModalButtonStates();
+                updateModalPreview();
+            }
+        }
+        
+        function applyModalHandToPlayer() {
+            const handCode = document.getElementById('modal-hand-code').textContent;
+            const card1Code = handCode.substring(0, 2);
+            const card2Code = handCode.substring(2, 4);
+            
+            // 检查是否重复
+            if (usedCards.has(card1Code) || usedCards.has(card2Code)) {
+                showMessage('所选牌已被使用，请重新选择', 'error');
+                return;
+            }
+            
+            // 移除旧手牌（如果存在）
+            const oldHand = playerHands[currentEditingPlayer];
+            if (oldHand && oldHand.length === 4) {
+                usedCards.delete(oldHand.substring(0, 2));
+                usedCards.delete(oldHand.substring(2, 4));
+            }
+            
+            // 添加新手牌
+            playerHands[currentEditingPlayer] = handCode;
+            usedCards.add(card1Code);
+            usedCards.add(card2Code);
+            
+            // 更新显示
+            updateHandDisplay(currentEditingPlayer, handCode);
+            updateUsedCardsDisplay();
+            updateBoardUsedCardsDisplay();
+            updateBoardButtonState();
+            
+            showMessage(`玩家 ${currentEditingPlayer} 手牌已设置: ${handCode}`, 'success');
+            closeHandPicker();
+        }
+        
+        // ============ 公共牌选择器（简化版） ============
+        function openBoardPicker() {
+            const stage = document.getElementById('stage').value;
+            const stageNames = {
+                'preflop': '翻牌前',
+                'flop': '翻牌圈',
+                'turn': '转牌圈',
+                'river': '河牌圈'
+            };
+            
+            document.getElementById('board-stage').textContent = stageNames[stage];
+            document.getElementById('board-required-count').textContent = getRequiredBoardCards();
+            document.getElementById('board-selected-count').textContent = boardSelection.length;
+            document.getElementById('board-used-cards-count').textContent = usedCards.size;
+            
+            // 重置选择
+            boardSelection = [...boardCards];
+            updateBoardPickerDisplay();
+            updateBoardPickerCardGrid(); // 使用新的牌堆显示函数
+            updateBoardPickerButtonStates();
+            
+            document.getElementById('boardPickerModal').style.display = 'flex';
+        }
+        
+        function updateBoardPickerCardGrid() {
+            const grid = document.getElementById('board-cards-grid');
+            if (!grid) return;
+            
+            grid.innerHTML = '';
+            
+            // 13行 * 4列布局，更清晰
+            const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
+            const suits = ['s', 'h', 'd', 'c'];
+            
+            // 按行排列
+            ranks.forEach(rank => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'card-grid-row';
+                
+                suits.forEach(suit => {
+                    const cardCode = rank + suit;
+                    const isUsed = usedCards.has(cardCode);
+                    const isSelected = boardSelection.includes(cardCode);
+                    
+                    const cardBtn = document.createElement('button');
+                    cardBtn.className = 'card-grid-btn';
+                    if (isSelected) cardBtn.classList.add('selected');
+                    if (isUsed && !isSelected) cardBtn.classList.add('used');
+                    
+                    cardBtn.innerHTML = `
+                        <div class="card-rank-lg">${rank}</div>
+                        <div class="card-suit-lg">${getSuitSymbol(suit)}</div>
+                    `;
+                    
+                    // 设置花色颜色
+                    if (isSelected) {
+                        cardBtn.style.background = getSuitColor(suit);
+                        cardBtn.style.color = 'white';
+                        cardBtn.style.borderColor = getSuitColor(suit).split(' ')[2]; // 获取主颜色
+                    } else if (isUsed) {
+                        cardBtn.style.background = '#f5f5f5';
+                        cardBtn.style.color = '#999';
+                    } else {
+                        cardBtn.style.background = 'white';
+                        cardBtn.style.color = '#333';
+                        if (suit === 'h' || suit === 'd') {
+                            cardBtn.style.color = '#e74c3c'; // 红心方块用红色
+                        }
+                    }
+                    
+                    // 点击事件
+                    cardBtn.onclick = function() {
+                        if (isUsed && !isSelected) {
+                            showMessage('此牌已被使用', 'warning');
+                            return;
+                        }
+                        
+                        if (isSelected) {
+                            // 取消选择
+                            boardSelection = boardSelection.filter(c => c !== cardCode);
+                        } else {
+                            // 检查是否已达到最大牌数
+                            if (boardSelection.length >= getRequiredBoardCards()) {
+                                showMessage(`最多只能选择${getRequiredBoardCards()}张公共牌`, 'warning');
+                                return;
+                            }
+                            boardSelection.push(cardCode);
+                        }
+                        
+                        updateBoardPickerDisplay();
+                        updateBoardPickerCardGrid(); // 重新渲染牌堆
+                        updateBoardPickerButtonStates();
+                    };
+                    
+                    rowDiv.appendChild(cardBtn);
+                });
+                
+                grid.appendChild(rowDiv);
+            });
+        }
+        
+        function updateBoardPickerDisplay() {
+            const display = document.getElementById('board-picker-display');
+            const cardsContainer = document.getElementById('board-picker-cards');
+            const handCodeElement = document.getElementById('board-hand-code');
+            
+            display.innerHTML = '';
+            
+            if (boardSelection.length === 0) {
+                display.innerHTML = '<div class="board-empty">请从下方牌堆中选择公共牌</div>';
+            } else {
+                boardSelection.forEach(cardCode => {
+                    const cardDiv = document.createElement('div');
+                    cardDiv.className = 'board-card';
+                    cardDiv.style.background = getSuitColor(cardCode[1]);
+                    cardDiv.style.color = 'white';
+                    cardDiv.innerHTML = `
+                        <div style="font-size: 20px; font-weight: bold;">${cardCode[0]}</div>
+                        <div style="font-size: 24px;">${getSuitSymbol(cardCode[1])}</div>
+                    `;
+                    display.appendChild(cardDiv);
+                });
+            }
+            
+            // 更新手牌代码
+            const codeElement = document.getElementById('board-hand-code');
+            if (codeElement) {
+                codeElement.textContent = boardSelection.join('');
+            }
+            
+            // 更新计数
+            document.getElementById('board-selected-count').textContent = boardSelection.length;
+            document.getElementById('board-required-count').textContent = getRequiredBoardCards();
+        }
+        
+        function updateBoardPickerButtonStates() {
+            const required = getRequiredBoardCards();
+            const selected = boardSelection.length;
+            
+            // 更新应用按钮状态
+            const applyBtn = document.getElementById('board-apply-btn');
+            if (applyBtn) {
+                applyBtn.disabled = selected !== required;
+                applyBtn.textContent = selected === required ? '✅ 应用公共牌' : `请选择 ${required} 张牌`;
+            }
+        }
+        
+        function clearBoardSelection() {
+            boardSelection = [];
+            updateBoardPickerDisplay();
+            updateBoardPickerCardGrid();
+            updateBoardPickerButtonStates();
+        }
+        
+        function applyQuickBoard(boardStr) {
+            if (boardStr.length % 2 !== 0) return;
+            
+            const cards = [];
+            for (let i = 0; i < boardStr.length; i += 2) {
+                const cardCode = boardStr.substring(i, i + 2);
+                if (!usedCards.has(cardCode) && !boardSelection.includes(cardCode)) {
+                    cards.push(cardCode);
+                }
+            }
+            
+            if (cards.length > 0) {
+                boardSelection = cards.slice(0, getRequiredBoardCards());
+                updateBoardPickerDisplay();
+                updateBoardPickerCardGrid();
+                updateBoardPickerButtonStates();
+            }
+        }
+        
+        function closeBoardPicker() {
+            document.getElementById('boardPickerModal').style.display = 'none';
+            boardSelection = [];
+        }
+        
+        function initializeBoardPickerModal() {
+            // 绑定应用按钮
+            const applyBtn = document.getElementById('board-apply-btn');
+            if (applyBtn) {
+                applyBtn.addEventListener('click', applyBoardSelection);
+            }
+            
+            // 点击模态框外部关闭
+            document.getElementById('boardPickerModal').addEventListener('click', function(e) {
+                if (e.target === this) closeBoardPicker();
+            });
+        }
+        
+        function applyBoardSelection() {
+            const required = getRequiredBoardCards();
+            if (boardSelection.length !== required) {
+                showMessage(`需要${required}张公共牌，当前选择了${boardSelection.length}张`, 'error');
+                return;
+            }
+            
+            // 移除旧的公共牌
+            boardCards.forEach(card => usedCards.delete(card));
+            
+            // 添加新的公共牌
+            boardCards = [...boardSelection];
+            boardCards.forEach(card => usedCards.add(card));
+            
+            // 更新显示
+            updateBoardDisplay();
+            updateUsedCardsDisplay();
+            updateBoardUsedCardsDisplay();
+            
+            showMessage(`公共牌已设置: ${boardCards.join(' ')}`, 'success');
+            closeBoardPicker();
+        }
+        
+        // ============ 辅助函数 ============
+        function updateUsedCardsDisplay() {
+            const grid = document.getElementById('cards-grid');
+            if (!grid) return;
+            
+            grid.innerHTML = '';
+            
+            const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
+            const suits = ['s', 'h', 'd', 'c'];
+            
+            ranks.forEach(rank => {
+                suits.forEach(suit => {
+                    const cardCode = rank + suit;
+                    const cardItem = document.createElement('div');
+                    cardItem.className = `card-item ${usedCards.has(cardCode) ? 'used' : 'available'}`;
+                    cardItem.textContent = rank + getSuitSymbol(suit);
+                    cardItem.title = cardCode;
+                    grid.appendChild(cardItem);
+                });
+            });
+            
+            document.getElementById('used-cards-count').textContent = usedCards.size;
+        }
+        
+        function updateBoardUsedCardsDisplay() {
+            const countElement = document.getElementById('board-used-cards-count');
+            if (countElement) {
+                countElement.textContent = usedCards.size;
+            }
+        }
+        
+        function updateHandDisplay(playerNum, handCode) {
+            const display = document.getElementById(`hand-display${playerNum}`);
+            
+            if (handCode && handCode.length === 4) {
+                const card1Code = handCode.substring(0, 2);
+                const card2Code = handCode.substring(2, 4);
+                
+                display.innerHTML = `
+                    <div class="card-display" style="background: ${getSuitColor(card1Code[1])}; color: white;">
+                        ${card1Code[0]}${getSuitSymbol(card1Code[1])}
+                    </div>
+                    <div class="card-display" style="background: ${getSuitColor(card2Code[1])}; color: white;">
+                        ${card2Code[0]}${getSuitSymbol(card2Code[1])}
+                    </div>
+                `;
+                display.className = 'hand-display';
+            } else {
+                display.textContent = '点击设置手牌';
+                display.className = 'hand-display empty';
+            }
+        }
+        
+        function updateBoardDisplay() {
+            const display = document.getElementById('board-display');
+            display.innerHTML = '';
+            
+            if (boardCards.length === 0) {
+                display.innerHTML = '<div class="board-empty">暂无公共牌</div>';
+            } else {
+                boardCards.forEach(cardCode => {
+                    const cardDiv = document.createElement('div');
+                    cardDiv.className = 'board-card';
+                    cardDiv.style.background = getSuitColor(cardCode[1]);
+                    cardDiv.style.color = 'white';
+                    cardDiv.innerHTML = `
+                        <div style="font-size: 16px;">${cardCode[0]}</div>
+                        <div style="font-size: 14px;">${getSuitSymbol(cardCode[1])}</div>
+                    `;
+                    display.appendChild(cardDiv);
+                });
+            }
+            
+            // 更新计数
+            document.getElementById('current-cards').textContent = boardCards.length;
+        }
+        
+        function updateStageInfo() {
+            const stage = document.getElementById('stage').value;
+            const stageNames = {
+                'preflop': '翻牌前',
+                'flop': '翻牌圈',
+                'turn': '转牌圈',
+                'river': '河牌圈'
+            };
+            
+            const requiredCards = getRequiredBoardCards();
+            const messages = {
+                'preflop': '翻牌前阶段无需设置公共牌。请先设置玩家手牌。',
+                'flop': '翻牌圈需要3张公共牌。请先设置玩家手牌，然后点击"设置公共牌"。',
+                'turn': '转牌圈需要4张公共牌。请先设置玩家手牌，然后点击"设置公共牌"。',
+                'river': '河牌圈需要5张公共牌。请先设置玩家手牌，然后点击"设置公共牌"。'
+            };
+            
+            document.getElementById('stage-info').innerHTML = `<strong>${stageNames[stage]}阶段：</strong> ${messages[stage]}`;
+            document.getElementById('current-stage').textContent = stageNames[stage];
+            document.getElementById('required-cards').textContent = requiredCards;
+            
+            // 更新公共牌按钮状态
+            updateBoardButtonState();
+        }
+        
+        function getRequiredBoardCards() {
+            const stage = document.getElementById('stage').value;
+            const requirements = {
+                'preflop': 0,
+                'flop': 3,
+                'turn': 4,
+                'river': 5
+            };
+            return requirements[stage] || 0;
+        }
+        
+        function updateBoardButtonState() {
+            const stage = document.getElementById('stage').value;
+            const btn = document.getElementById('board-picker-btn');
+            
+            if (stage === 'preflop') {
+                btn.disabled = true;
+                btn.innerHTML = '❌ 翻牌前无需公共牌';
+            } else {
+                // 检查是否有玩家设置了手牌
+                const numPlayers = parseInt(document.getElementById('num_players').value);
+                let hasHands = false;
+                for (let i = 1; i <= numPlayers; i++) {
+                    if (playerHands[i] && playerHands[i].length === 4) {
+                        hasHands = true;
+                        break;
+                    }
+                }
+                
+                btn.disabled = !hasHands;
+                btn.innerHTML = hasHands ? '✏️ 设置公共牌' : '⚠️ 请先设置玩家手牌';
+            }
+        }
+        
+        // ============ 随机手牌功能 ============
+        async function randomHand(playerNum) {
+            try {
+                const response = await fetch('/random_hand');
+                const data = await response.json();
+                const handCode = data.hand;
+                
+                // 检查是否重复
+                const card1Code = handCode.substring(0, 2);
+                const card2Code = handCode.substring(2, 4);
+                
+                if (usedCards.has(card1Code) || usedCards.has(card2Code)) {
+                    // 如果有重复，递归重试
+                    await randomHand(playerNum);
+                    return;
+                }
+                
+                // 移除旧手牌
+                const oldHand = playerHands[playerNum];
+                if (oldHand && oldHand.length === 4) {
+                    usedCards.delete(oldHand.substring(0, 2));
+                    usedCards.delete(oldHand.substring(2, 4));
+                }
+                
+                // 添加新手牌
+                playerHands[playerNum] = handCode;
+                usedCards.add(card1Code);
+                usedCards.add(card2Code);
+                
+                updateHandDisplay(playerNum, handCode);
+                updateUsedCardsDisplay();
+                updateBoardUsedCardsDisplay();
+                updateBoardButtonState();
+                
+                showMessage(`玩家 ${playerNum} 获得随机手牌: ${handCode}`, 'info');
+                
+            } catch (error) {
+                // 本地生成
+                const ranks = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+                const suits = ['s','h','d','c'];
+                
+                let handCode = '';
+                let attempts = 0;
+                
+                while (attempts < 100) {
+                    handCode = '';
+                    while (handCode.length < 4) {
+                        const rank = ranks[Math.floor(Math.random() * ranks.length)];
+                        const suit = suits[Math.floor(Math.random() * suits.length)];
+                        const card = rank + suit;
+                        if (!handCode.includes(card)) {
+                            handCode += card;
+                        }
+                    }
+                    
+                    const card1Code = handCode.substring(0, 2);
+                    const card2Code = handCode.substring(2, 4);
+                    
+                    if (!usedCards.has(card1Code) && !usedCards.has(card2Code)) {
+                        break;
+                    }
+                    attempts++;
+                }
+                
+                if (attempts >= 100) {
+                    showMessage('无法生成不重复的随机手牌', 'error');
+                    return;
+                }
+                
+                // 移除旧手牌
+                const oldHand = playerHands[playerNum];
+                if (oldHand && oldHand.length === 4) {
+                    usedCards.delete(oldHand.substring(0, 2));
+                    usedCards.delete(oldHand.substring(2, 4));
+                }
+                
+                // 添加新手牌
+                playerHands[playerNum] = handCode;
+                usedCards.add(handCode.substring(0, 2));
+                usedCards.add(handCode.substring(2, 4));
+                
+                updateHandDisplay(playerNum, handCode);
+                updateUsedCardsDisplay();
+                updateBoardUsedCardsDisplay();
+                updateBoardButtonState();
+                
+                showMessage(`玩家 ${playerNum} 获得随机手牌: ${handCode}`, 'info');
+            }
+        }
+        
+        async function randomAllHands() {
+            const numPlayers = parseInt(document.getElementById('num_players').value);
+            for (let i = 1; i <= numPlayers; i++) {
+                await randomHand(i);
+                await new Promise(resolve => setTimeout(resolve, 100)); // 小延迟避免重复
+            }
+        }
+        
+        function clearHand(playerNum) {
+            const oldHand = playerHands[playerNum];
+            if (oldHand && oldHand.length === 4) {
+                usedCards.delete(oldHand.substring(0, 2));
+                usedCards.delete(oldHand.substring(2, 4));
+                playerHands[playerNum] = '';
+            }
+            
+            updateHandDisplay(playerNum, '');
+            updateUsedCardsDisplay();
+            updateBoardUsedCardsDisplay();
+            updateBoardButtonState();
+            
+            showMessage(`玩家 ${playerNum} 手牌已清空`, 'info');
+        }
+        
+        function clearAllHands() {
+            const numPlayers = parseInt(document.getElementById('num_players').value);
+            for (let i = 1; i <= numPlayers; i++) {
+                clearHand(i);
+            }
+        }
+        
+        // ============ 其他功能 ============
+        function updateSimulationsDisplay() {
+            const sims = parseInt(document.getElementById('simulations').value);
+            document.getElementById('current_sims').textContent = sims.toLocaleString();
+        }
+        
+        function resetCalculator() {
+            // 重置所有状态
+            usedCards.clear();
+            playerHands = {};
+            boardCards = [];
+            boardSelection = [];
+            
+            // 重置显示
+            initializeHands();
+            updateBoardDisplay();
+            updateUsedCardsDisplay();
+            updateBoardUsedCardsDisplay();
+            updateStageInfo();
+            updateBoardButtonState();
+            
+            // 隐藏结果
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('calc_time').textContent = '-';
+            
+            showMessage('计算器已重置', 'info');
+        }
+        
+        function loadExample(hands, stage, board) {
+            resetCalculator();
+            
+            // 设置玩家数量
+            document.getElementById('num_players').value = hands.length;
+            initializeHands();
+            
+            // 设置手牌
+            hands.forEach((hand, index) => {
+                playerHands[index + 1] = hand;
+                usedCards.add(hand.substring(0, 2));
+                usedCards.add(hand.substring(2, 4));
+                updateHandDisplay(index + 1, hand);
+            });
+            
+            // 设置阶段和公共牌
+            document.getElementById('stage').value = stage;
+            
+            if (board) {
+                const boardArray = [];
+                for (let i = 0; i < board.length; i += 2) {
+                    const card = board.substring(i, i + 2);
+                    boardArray.push(card);
+                    usedCards.add(card);
+                }
+                boardCards = boardArray;
+                updateBoardDisplay();
+            }
+            
+            updateStageInfo();
+            updateUsedCardsDisplay();
+            updateBoardUsedCardsDisplay();
+            updateBoardButtonState();
+            
+            showMessage(`已加载示例: ${hands.length}人${stage}阶段`, 'info');
+        }
+        
+        function calculateOdds() {
+            const stage = document.getElementById('stage').value;
+            const requiredCards = getRequiredBoardCards();
+            
+            // 验证手牌
+            const numPlayers = parseInt(document.getElementById('num_players').value);
+            let allHandsSet = true;
+            for (let i = 1; i <= numPlayers; i++) {
+                if (!playerHands[i] || playerHands[i].length !== 4) {
+                    allHandsSet = false;
+                    break;
+                }
+            }
+            
+            if (!allHandsSet) {
+                showMessage('请为所有玩家设置手牌', 'error');
+                return;
+            }
+            
+            // 验证公共牌
+            if (stage !== 'preflop' && boardCards.length !== requiredCards) {
+                showMessage(`${stage}阶段需要${requiredCards}张公共牌，当前设置了${boardCards.length}张`, 'error');
+                return;
+            }
+            
+            // 开始计算
+            const button = document.querySelector('.btn-primary');
+            const originalText = button.innerHTML;
+            button.innerHTML = '⏳ 计算中...';
+            button.disabled = true;
+            
+            const startTime = Date.now();
+            
+            const data = {
+                num_players: document.getElementById('num_players').value,
+                stage: stage,
+                simulations: document.getElementById('simulations').value,
+                board: boardCards.join('')
+            };
+            
+            // 收集手牌
+            for (let i = 1; i <= numPlayers; i++) {
+                data[`hand${i}`] = playerHands[i];
+            }
+            
+            fetch('/calculate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                displayResults(result);
+                
+                const endTime = Date.now();
+                const calcTime = ((endTime - startTime) / 1000).toFixed(2);
+                document.getElementById('calc_time').textContent = calcTime;
+            })
+            .catch(error => {
+                showError('计算错误: ' + error.message);
+            })
+            .finally(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+        }
+        
+        function displayResults(data) {
+            const resultsPanel = document.getElementById('results');
+            const content = document.getElementById('results-content');
+            
+            if (data.error) {
+                content.innerHTML = `<div class="error">❌ ${data.error}</div>`;
+                resultsPanel.style.display = 'block';
+                return;
+            }
+            
+            let html = `
+                <div style="margin-bottom: 15px; padding: 10px; background: #e8f4f8; border-radius: 6px;">
+                    <div><strong>模拟次数:</strong> ${data.simulations.toLocaleString()} 次</div>
+                </div>
+                <div class="players-results">
+            `;
+            
+            const players = Object.keys(data.result)
+                .map(key => ({
+                    id: key,
+                    number: parseInt(key.replace('player', '')),
+                    ...data.result[key]
+                }))
+                .sort((a, b) => b.equity - a.equity);
+            
+            players.forEach((player, index) => {
+                const isWinner = index === 0;
+                const handCode = playerHands[player.number] || '';
+                
+                html += `
+                    <div class="player-result" style="${isWinner ? 'border-left-color: #27ae60;' : ''}">
+                        <div class="player-header">
+                            <span class="player-name">玩家 ${player.number} ${isWinner ? '👑' : ''}</span>
+                            <span class="player-hand">
+                                ${handCode ? formatHandDisplay(handCode) : '无手牌'}
+                            </span>
+                        </div>
+                        <div class="equity-bar">
+                            <div class="bar-fill" style="width: ${player.equity}%">${player.equity}%</div>
+                        </div>
+                        <div class="player-stats">
+                            <div class="stat">
+                                <span class="stat-label">胜率</span>
+                                <span class="stat-value win">${player.win}%</span>
+                            </div>
+                            <div class="stat">
+                                <span class="<span class="stat-label">权益</span>
+                                <span class="stat-value equity">${player.equity}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                </div>
+                <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 12px;">
+                    <p><strong>💡 说明:</strong> 权益 = 胜率 + (平局率 ÷ 玩家数)。权益越高，长期收益越大。</p>
+                </div>
+            `;
+            
+            content.innerHTML = html;
+            resultsPanel.style.display = 'block';
+            resultsPanel.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function formatHandDisplay(handCode) {
+            if (!handCode || handCode.length !== 4) return '';
+            
+            const card1Code = handCode.substring(0, 2);
+            const card2Code = handCode.substring(2, 4);
+            
+            return `
+                <span style="display: inline-block; padding: 2px 6px; border-radius: 3px; background: ${getSuitColor(card1Code[1])}; color: white; margin: 0 2px; font-weight: bold;">
+                    ${card1Code[0]}${getSuitSymbol(card1Code[1])}
+                </span>
+                <span style="display: inline-block; padding: 2px 6px; border-radius: 3px; background: ${getSuitColor(card2Code[1])}; color: white; margin: 0 2px; font-weight: bold;">
+                    ${card2Code[0]}${getSuitSymbol(card2Code[1])}
+                </span>
+            `;
+        }
+        
+        function showError(message) {
+            const content = document.getElementById('results-content');
+            content.innerHTML = `<div class="error">❌ ${message}</div>`;
+            document.getElementById('results').style.display = 'block';
+        }
+        
+        // ============ 工具函数 ============
+        function getSuitSymbol(suit) {
+            const symbols = { 'h': '♥', 'd': '♦', 'c': '♣', 's': '♠' };
+            return symbols[suit] || '?';
+        }
+        
+        function getSuitColor(suit) {
+            const colors = {
+                'h': 'linear-gradient(135deg, #e74c3c, #c0392b)',
+                'd': 'linear-gradient(135deg, #e67e22, #d35400)',
+                'c': 'linear-gradient(135deg, #27ae60, #229954)',
+                's': 'linear-gradient(135deg, #3498db, #2980b9)'
+            };
+            return colors[suit] || '#95a5a6';
+        }
+        
+        function parseHandCode(handCode) {
+            if (handCode.length === 2) {
+                // 对子：AA, KK等
+                return [handCode[0] + 's', handCode[1] + 'h'];
+            } else if (handCode.length === 3) {
+                // AKs, AKo等
+                const card1 = handCode[0] + 's';
+                const card2 = handCode[1] + (handCode[2] === 's' ? 's' : 'h');
+                return [card1, card2];
+            } else if (handCode.length === 4) {
+                // 完整格式：AsKs
+                return [handCode.substring(0, 2), handCode.substring(2, 4)];
+            }
+            return [];
+        }
+        
+        function parseCardCode(cardCode) {
+            if (cardCode.length !== 2) return { rank: 'A', suit: 's' };
+            return { rank: cardCode[0], suit: cardCode[1] };
+        }
+        
+        function showMessage(message, type = 'info') {
+            const existingMsg = document.querySelector('.message');
+            if (existingMsg) existingMsg.remove();
+            
+            const msg = document.createElement('div');
+            msg.className = `message message-${type}`;
+            msg.textContent = message;
+            document.body.appendChild(msg);
+            
+            setTimeout(() => {
+                msg.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => msg.remove(), 300);
+            }, 3000);
+        }
+        
+        // 页面加载完成
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>

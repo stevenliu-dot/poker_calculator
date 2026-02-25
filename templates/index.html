@@ -1,0 +1,941 @@
+<!-- index.html - 德州扑克概率计算器（带Outs功能） -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>德州扑克概率计算器 - 含Outs分析</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Microsoft YaHei', Arial, sans-serif; 
+            background: linear-gradient(135deg, #1a2980, #26d0ce); 
+            color: #333; 
+            padding: 20px; 
+            min-height: 100vh; 
+        }
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+            overflow: hidden; 
+        }
+        header { 
+            background: linear-gradient(135deg, #2c3e50, #34495e); 
+            color: white; 
+            padding: 20px; 
+            text-align: center; 
+        }
+        h1 { font-size: 2em; margin-bottom: 5px; }
+        .subtitle { color: #ecf0f1; font-size: 0.9em; }
+        .calculator { padding: 20px; }
+        .panel { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            border-radius: 8px; 
+            border: 1px solid #e9ecef; 
+        }
+        h2 { 
+            color: #2c3e50; 
+            margin-bottom: 15px; 
+            padding-bottom: 8px; 
+            border-bottom: 1px solid #3498db; 
+            font-size: 1.2em; 
+        }
+        .settings-row { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 10px; 
+            margin-bottom: 10px; 
+        }
+        .setting-item label { 
+            display: block; 
+            margin-bottom: 5px; 
+            font-weight: bold; 
+            color: #495057; 
+            font-size: 0.9em; 
+        }
+        .setting-item select, .setting-item input { 
+            width: 100%; 
+            padding: 8px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            font-size: 14px; 
+        }
+        .info-text { 
+            padding: 8px; 
+            background: #e8f4f8; 
+            border-radius: 4px; 
+            border-left: 3px solid #3498db; 
+            margin: 10px 0; 
+            font-size: 0.9em; 
+        }
+        .player-hand-row { 
+            display: grid; 
+            grid-template-columns: 100px 1fr auto; 
+            gap: 10px; 
+            align-items: center; 
+            margin-bottom: 10px; 
+            padding: 10px; 
+            background: white; 
+            border-radius: 6px; 
+            border: 1px solid #e9ecef; 
+        }
+        .player-label { font-weight: bold; color: #2c3e50; font-size: 14px; }
+        .hand-display { 
+            font-family: monospace; 
+            font-size: 14px; 
+            padding: 5px; 
+            background: #f8f9fa; 
+            border-radius: 4px; 
+            border: 1px solid #ddd; 
+        }
+        .hand-display.empty { color: #6c757d; font-style: italic; }
+        .hand-buttons { display: flex; gap: 5px; }
+        .btn { 
+            padding: 6px 12px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 12px; 
+            transition: all 0.2s; 
+        }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-primary:hover { background: #2980b9; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #5a6268; }
+        .btn-random { background: #9b59b6; color: white; }
+        .btn-random:hover { background: #8e44ad; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-success:hover { background: #229954; }
+        .btn-warning { background: #f39c12; color: white; }
+        .btn-warning:hover { background: #e67e22; }
+        .board-display { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 10px; 
+            margin: 15px 0; 
+            min-height: 50px; 
+            padding: 10px; 
+            background: white; 
+            border-radius: 6px; 
+            border: 1px dashed #ddd; 
+        }
+        .board-card { 
+            width: 40px; 
+            height: 60px; 
+            border-radius: 5px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 16px; 
+            font-weight: bold; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+            color: white;
+        }
+        .board-empty { color: #95a5a6; font-style: italic; padding: 10px; }
+        .control-buttons { 
+            display: flex; 
+            gap: 10px; 
+            justify-content: center; 
+            margin: 20px 0; 
+        }
+        .control-buttons .btn { padding: 10px 20px; font-size: 14px; }
+        .results-panel { display: none; margin-top: 20px; }
+        .player-result { 
+            background: white; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 8px; 
+            border-left: 4px solid #3498db; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+        }
+        .player-header { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 10px; 
+            padding-bottom: 8px; 
+            border-bottom: 1px solid #eee; 
+        }
+        .player-name { font-weight: bold; font-size: 1.1em; color: #2c3e50; }
+        .equity-bar { 
+            height: 30px; 
+            background: #ecf0f1; 
+            border-radius: 15px; 
+            margin: 10px 0; 
+            position: relative; 
+            overflow: hidden; 
+        }
+        .bar-fill { 
+            height: 100%; 
+            background: linear-gradient(90deg, #3498db, #2ecc71); 
+            border-radius: 15px; 
+            min-width: 30px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: flex-end; 
+            padding-right: 15px; 
+            color: white; 
+            font-weight: bold; 
+            font-size: 12px; 
+        }
+        .player-stats { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 10px; 
+            margin-top: 10px; 
+        }
+        .stat { text-align: center; padding: 8px; background: #f8f9fa; border-radius: 4px; }
+        .stat-label { display: block; color: #6c757d; font-size: 0.8em; margin-bottom: 3px; }
+        .stat-value { display: block; font-size: 1.1em; font-weight: bold; }
+        .win { color: #27ae60; }
+        .tie { color: #f39c12; }
+        .equity { color: #3498db; }
+        
+        /* Outs 显示样式 */
+        .outs-panel { 
+            display: none; 
+            margin-top: 20px; 
+            background: linear-gradient(135deg, #fff9e6, #fff3cd); 
+            border: 2px solid #f39c12; 
+        }
+        .outs-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 15px; 
+        }
+        .outs-count { 
+            font-size: 2em; 
+            font-weight: bold; 
+            color: #e67e22; 
+        }
+        .outs-percentage { 
+            font-size: 1.2em; 
+            color: #27ae60; 
+            font-weight: bold;
+        }
+        .outs-cards { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 8px; 
+            margin: 15px 0; 
+        }
+        .out-card { 
+            width: 45px; 
+            height: 65px; 
+            border-radius: 6px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 14px; 
+            font-weight: bold; 
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15); 
+            color: white;
+            animation: fadeInUp 0.3s ease-out;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .outs-details { 
+            margin-top: 15px; 
+            max-height: 300px; 
+            overflow-y: auto; 
+        }
+        .outs-detail-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 8px 12px; 
+            margin: 5px 0; 
+            background: white; 
+            border-radius: 6px; 
+            border-left: 3px solid #f39c12;
+        }
+        .outs-detail-card { font-weight: bold; color: #2c3e50; }
+        .outs-detail-equity { 
+            display: flex; 
+            gap: 15px; 
+            font-size: 0.9em; 
+        }
+        .outs-current { color: #e74c3c; }
+        .outs-new { color: #27ae60; }
+        .outs-gain { color: #f39c12; font-weight: bold; }
+        
+        footer { 
+            text-align: center; 
+            padding: 15px; 
+            background: #2c3e50; 
+            color: white; 
+            font-size: 0.8em; 
+        }
+        .error { 
+            background: #f8d7da; 
+            color: #721c24; 
+            padding: 10px; 
+            border-radius: 4px; 
+            border: 1px solid #f5c6cb; 
+            margin: 10px 0; 
+        }
+        .message { 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            padding: 10px 15px; 
+            border-radius: 6px; 
+            color: white; 
+            font-weight: bold; 
+            z-index: 1000; 
+            animation: slideIn 0.3s ease-out; 
+        }
+        .message-success { background: linear-gradient(135deg, #27ae60, #229954); }
+        .message-error { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>♠️♥️♦️♣️ 德州扑克概率计算器</h1>
+            <p class="subtitle">蒙特卡洛模拟 + Outs分析 - 学习GTO策略</p>
+        </header>
+        
+        <div class="calculator">
+            <!-- 游戏设置 -->
+            <div class="panel">
+                <h2>⚙️ 游戏设置</h2>
+                <div class="settings-row">
+                    <div class="setting-item">
+                        <label for="num_players">👥 玩家数量</label>
+                        <select id="num_players">
+                            <option value="2" selected>2人</option>
+                            <option value="3">3人</option>
+                            <option value="4">4人</option>
+                            <option value="5">5人</option>
+                            <option value="6">6人</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label for="stage">🎯 游戏阶段</label>
+                        <select id="stage">
+                            <option value="preflop">翻牌前</option>
+                            <option value="flop">翻牌圈</option>
+                            <option value="turn" selected>转牌圈（Outs分析）</option>
+                            <option value="river">河牌圈</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label for="simulations">🔢 模拟次数</label>
+                        <select id="simulations">
+                            <option value="1000">1千次</option>
+                            <option value="5000" selected>5千次</option>
+                            <option value="10000">1万次</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="info-text" id="stage-info">
+                    <strong>转牌圈：</strong> 4张公共牌已发出，可计算Outs（能让你在河牌圈获胜的牌）。
+                </div>
+            </div>
+            
+            <!-- 手牌设置 -->
+            <div class="panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2>🎴 玩家手牌设置</h2>
+                    <div>
+                        <button onclick="randomAllHands()" class="btn btn-random">🎲 全部随机</button>
+                        <button onclick="clearAllHands()" class="btn btn-secondary">🗑️ 清空</button>
+                    </div>
+                </div>
+                <div id="hands-container"></div>
+            </div>
+            
+            <!-- 公共牌设置 -->
+            <div class="panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2>🃏 公共牌设置</h2>
+                    <div>
+                        <button onclick="setBoardCards()" class="btn btn-primary">✏️ 设置公共牌</button>
+                        <button onclick="clearBoardCards()" class="btn btn-danger">清空</button>
+                    </div>
+                </div>
+                <div class="info-text">
+                    当前阶段：<span id="current-stage">转牌圈</span> | 
+                    需要牌数：<span id="required-cards">4</span> | 
+                    已设置：<span id="current-cards">0</span>
+                </div>
+                <div class="board-display" id="board-display">
+                    <div class="board-empty">暂无公共牌</div>
+                </div>
+            </div>
+            
+            <!-- 控制按钮 -->
+            <div class="control-buttons">
+                <button onclick="calculateOdds()" class="btn btn-primary">🧮 计算概率</button>
+                <button onclick="calculateOuts()" class="btn btn-warning" id="outs-btn" style="display:none;">🎯 计算Outs</button>
+                <button onclick="resetCalculator()" class="btn btn-secondary">🔄 重置</button>
+            </div>
+            
+            <!-- 概率结果面板 -->
+            <div id="results" class="panel results-panel">
+                <h2>📊 胜率计算结果</h2>
+                <div id="results-content"></div>
+            </div>
+            
+            <!-- Outs 结果面板 -->
+            <div id="outs-results" class="panel outs-panel">
+                <div class="outs-header">
+                    <h2>🎯 Outs分析（转牌圈）</h2>
+                    <div>
+                        <span class="outs-count" id="outs-count">0</span> 张
+                        <span class="outs-percentage" id="outs-percentage">0%</span>
+                    </div>
+                </div>
+                <div class="info-text">
+                    <strong>什么是Outs？</strong> 能让你在河牌圈从落后变为领先的牌。
+                    当前胜率 + Outs概率 ≈ 你的真实权益。
+                </div>
+                <div class="outs-cards" id="outs-cards"></div>
+                <div class="outs-details" id="outs-details"></div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2024 德州扑克概率计算器 | 仅供学习GTO策略使用 | 禁止用于赌博</p>
+            <p>模拟次数: <span id="current_sims">5,000</span> | 计算时间: <span id="calc_time">-</span>秒</p>
+        </footer>
+    </div>
+
+    <script>
+        // ============ 全局状态 ============
+        let usedCards = new Set();
+        let playerHands = {};
+        let boardCards = [];
+        
+        // ============ 初始化 ============
+        function initializePage() {
+            initializeHands();
+            updateStageInfo();
+            
+            document.getElementById('num_players').addEventListener('change', initializeHands);
+            document.getElementById('stage').addEventListener('change', updateStageInfo);
+            document.getElementById('simulations').addEventListener('change', function() {
+                document.getElementById('current_sims').textContent = 
+                    parseInt(this.value).toLocaleString();
+            });
+        }
+        
+        function initializeHands() {
+            const container = document.getElementById('hands-container');
+            const numPlayers = parseInt(document.getElementById('num_players').value);
+            container.innerHTML = '';
+            
+            for (let i = 1; i <= numPlayers; i++) {
+                const row = document.createElement('div');
+                row.className = 'player-hand-row';
+                row.innerHTML = `
+                    <div class="player-label">玩家 ${i}</div>
+                    <div class="hand-display empty" id="hand-display${i}">点击输入手牌</div>
+                    <div class="hand-buttons">
+                        <button class="btn btn-random" onclick="randomHand(${i})">🎲</button>
+                        <input type="text" id="hand-input${i}" maxlength="4" placeholder="如:AsKs" 
+                               style="width:70px;text-transform:uppercase;"
+                               onchange="updateHandFromInput(${i}, this.value)">
+                        <button class="btn btn-danger" onclick="clearHand(${i})">✕</button>
+                    </div>
+                `;
+                container.appendChild(row);
+            }
+            
+            for (let i = 1; i <= numPlayers; i++) {
+                if (!playerHands[i]) playerHands[i] = '';
+            }
+        }
+        
+        // ============ 手牌管理 ============
+        function updateHandFromInput(playerNum, value) {
+            value = value.toUpperCase();
+            if (value.length !== 4) return;
+            
+            // 验证格式
+            const validRanks = 'AKQJT98765432';
+            const validSuits = 'SHDC';
+            if (!validRanks.includes(value[0]) || !validSuits.includes(value[1]) ||
+                !validRanks.includes(value[2]) || !validSuits.includes(value[3])) {
+                showMessage('格式错误！例: AsKs (A♠K♠)', 'error');
+                return;
+            }
+            
+            // 检查重复
+            const card1 = value[0] + value[1].toLowerCase();
+            const card2 = value[2] + value[3].toLowerCase();
+            
+            if (usedCards.has(card1) || usedCards.has(card2)) {
+                showMessage('该牌已被使用', 'error');
+                return;
+            }
+            
+            // 移除旧手牌
+            const oldHand = playerHands[playerNum];
+            if (oldHand) {
+                usedCards.delete(oldHand.substring(0, 2));
+                usedCards.delete(oldHand.substring(2, 4));
+            }
+            
+            // 添加新手牌
+            playerHands[playerNum] = value;
+            usedCards.add(card1);
+            usedCards.add(card2);
+            
+            updateHandDisplay(playerNum, value);
+            updateOutsButton();
+            showMessage(`玩家 ${playerNum} 手牌: ${value}`, 'success');
+        }
+        
+        function updateHandDisplay(playerNum, handCode) {
+            const display = document.getElementById(`hand-display${playerNum}`);
+            if (handCode) {
+                display.innerHTML = formatCards(handCode);
+                display.classList.remove('empty');
+            } else {
+                display.textContent = '点击输入手牌';
+                display.classList.add('empty');
+            }
+        }
+        
+        function formatCards(cardCode) {
+            if (!cardCode || cardCode.length !== 4) return '';
+            const c1 = cardCode.substring(0, 2);
+            const c2 = cardCode.substring(2, 4);
+            return `<span style="background:${getSuitColor(c1[1])};color:white;padding:3px 8px;border-radius:4px;margin:0 2px;font-weight:bold;">${c1[0]}${getSuitSymbol(c1[1])}</span>
+                    <span style="background:${getSuitColor(c2[1])};color:white;padding:3px 8px;border-radius:4px;margin:0 2px;font-weight:bold;">${c2[0]}${getSuitSymbol(c2[1])}</span>`;
+        }
+        
+        function getSuitSymbol(suit) {
+            const symbols = { 's': '♠', 'h': '♥', 'd': '♦', 'c': '♣' };
+            return symbols[suit.toLowerCase()] || '?';
+        }
+        
+        function getSuitColor(suit) {
+            const colors = {
+                's': 'linear-gradient(135deg, #3498db, #2980b9)',
+                'h': 'linear-gradient(135deg, #e74c3c, #c0392b)',
+                'd': 'linear-gradient(135deg, #e67e22, #d35400)',
+                'c': 'linear-gradient(135deg, #27ae60, #229954)'
+            };
+            return colors[suit.toLowerCase()] || '#95a5a6';
+        }
+        
+        function randomHand(playerNum) {
+            const ranks = 'AKQJT98765432';
+            const suits = 'shdc';
+            let attempts = 0;
+            let handCode;
+            
+            while (attempts < 100) {
+                const r1 = ranks[Math.floor(Math.random() * ranks.length)];
+                const s1 = suits[Math.floor(Math.random() * suits.length)];
+                const r2 = ranks[Math.floor(Math.random() * ranks.length)];
+                const s2 = suits[Math.floor(Math.random() * suits.length)];
+                
+                if (r1 === r2 && s1 === s2) continue;
+                
+                handCode = (r1 + s1 + r2 + s2).toUpperCase();
+                const c1 = r1 + s1;
+                const c2 = r2 + s2;
+                
+                if (!usedCards.has(c1) && !usedCards.has(c2)) {
+                    document.getElementById(`hand-input${playerNum}`).value = handCode;
+                    updateHandFromInput(playerNum, handCode);
+                    return;
+                }
+                attempts++;
+            }
+            showMessage('无法生成不重复的随机手牌', 'error');
+        }
+        
+        function randomAllHands() {
+            const numPlayers = parseInt(document.getElementById('num_players').value);
+            for (let i = 1; i <= numPlayers; i++) {
+                setTimeout(() => randomHand(i), i * 100);
+            }
+        }
+        
+        function clearHand(playerNum) {
+            const oldHand = playerHands[playerNum];
+            if (oldHand) {
+                usedCards.delete(oldHand.substring(0, 2).toLowerCase());
+                usedCards.delete(oldHand.substring(2, 4).toLowerCase());
+                playerHands[playerNum] = '';
+            }
+            document.getElementById(`hand-input${playerNum}`).value = '';
+            updateHandDisplay(playerNum, '');
+            updateOutsButton();
+        }
+        
+        function clearAllHands() {
+            const numPlayers = parseInt(document.getElementById('num_players').value);
+            for (let i = 1; i <= numPlayers; i++) {
+                clearHand(i);
+            }
+        }
+        
+        // ============ 公共牌管理 ============
+        function setBoardCards() {
+            const stage = document.getElementById('stage').value;
+            const required = { 'flop': 3, 'turn': 4, 'river': 5, 'preflop': 0 };
+            const count = required[stage] || 0;
+            
+            if (count === 0) {
+                showMessage('翻牌前无需设置公共牌', 'info');
+                return;
+            }
+            
+            const input = prompt(`请输入${count}张公共牌（如：AhKdQc）：`);
+            if (!input) return;
+            
+            const value = input.toUpperCase().replace(/\s/g, '');
+            if (value.length !== count * 2) {
+                showMessage(`需要${count}张牌（${count*2}个字符）`, 'error');
+                return;
+            }
+            
+            // 验证并检查重复
+            const validRanks = 'AKQJT98765432';
+            const validSuits = 'SHDC';
+            const newCards = [];
+            
+            for (let i = 0; i < value.length; i += 2) {
+                const rank = value[i];
+                const suit = value[i+1];
+                if (!validRanks.includes(rank) || !validSuits.includes(suit)) {
+                    showMessage('格式错误！例: AhKdQc', 'error');
+                    return;
+                }
+                const cardCode = rank + suit.toLowerCase();
+                if (usedCards.has(cardCode)) {
+                    showMessage(`牌 ${rank}${getSuitSymbol(suit)} 已被使用`, 'error');
+                    return;
+                }
+                newCards.push(cardCode);
+            }
+            
+            // 清除旧公共牌
+            boardCards.forEach(c => usedCards.delete(c));
+            
+            // 添加新公共牌
+            boardCards = newCards;
+            boardCards.forEach(c => usedCards.add(c));
+            
+            updateBoardDisplay();
+            updateOutsButton();
+            showMessage(`公共牌已设置: ${boardCards.map(c => c[0]+getSuitSymbol(c[1])).join(' ')}`, 'success');
+        }
+        
+        function updateBoardDisplay() {
+            const display = document.getElementById('board-display');
+            document.getElementById('current-cards').textContent = boardCards.length;
+            
+            if (boardCards.length === 0) {
+                display.innerHTML = '<div class="board-empty">暂无公共牌</div>';
+                return;
+            }
+            
+            display.innerHTML = boardCards.map(c => 
+                `<div class="board-card" style="background:${getSuitColor(c[1])};color:white;">
+                    <div>${c[0]}</div>
+                    <div>${getSuitSymbol(c[1])}</div>
+                </div>`
+            ).join('');
+        }
+        
+        function clearBoardCards() {
+            boardCards.forEach(c => usedCards.delete(c));
+            boardCards = [];
+            updateBoardDisplay();
+            updateOutsButton();
+        }
+        
+        function updateStageInfo() {
+            const stage = document.getElementById('stage').value;
+            const stageNames = {
+                'preflop': '翻牌前',
+                'flop': '翻牌圈',
+                'turn': '转牌圈',
+                'river': '河牌圈'
+            };
+            const required = { 'preflop': 0, 'flop': 3, 'turn': 4, 'river': 5 };
+            
+            document.getElementById('current-stage').textContent = stageNames[stage];
+            document.getElementById('required-cards').textContent = required[stage];
+            
+            // 显示/隐藏Outs按钮
+            updateOutsButton();
+        }
+        
+        function updateOutsButton() {
+            const stage = document.getElementById('stage').value;
+            const outsBtn = document.getElementById('outs-btn');
+            
+            // 只有在转牌圈且有手牌和公共牌时才显示Outs按钮
+            if (stage === 'turn' && boardCards.length === 4) {
+                const numPlayers = parseInt(document.getElementById('num_players').value);
+                let hasHands = true;
+                for (let i = 1; i <= numPlayers; i++) {
+                    if (!playerHands[i] || playerHands[i].length !== 4) {
+                        hasHands = false;
+                        break;
+                    }
+                }
+                outsBtn.style.display = hasHands ? 'inline-block' : 'none';
+            } else {
+                outsBtn.style.display = 'none';
+            }
+        }
+        
+        // ============ 计算功能 ============
+        function calculateOdds() {
+            const stage = document.getElementById('stage').value;
+            const numPlayers = parseInt(document.getElementById('num_players').value);
+            
+            // 验证手牌
+            for (let i = 1; i <= numPlayers; i++) {
+                if (!playerHands[i] || playerHands[i].length !== 4) {
+                    showMessage(`请为玩家 ${i} 设置手牌`, 'error');
+                    return;
+                }
+            }
+            
+            // 验证公共牌
+            const required = { 'preflop': 0, 'flop': 3, 'turn': 4, 'river': 5 };
+            if (boardCards.length !== required[stage]) {
+                showMessage(`${stage}阶段需要${required[stage]}张公共牌`, 'error');
+                return;
+            }
+            
+            const btn = document.querySelector('.btn-primary');
+            btn.disabled = true;
+            btn.textContent = '⏳ 计算中...';
+            const startTime = Date.now();
+            
+            const data = {
+                num_players: numPlayers,
+                stage: stage,
+                simulations: document.getElementById('simulations').value,
+                board: boardCards.join('')
+            };
+            
+            for (let i = 1; i <= numPlayers; i++) {
+                data[`hand${i}`] = playerHands[i];
+            }
+            
+            fetch('/calculate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(result => {
+                displayResults(result);
+                document.getElementById('calc_time').textContent = 
+                    ((Date.now() - startTime) / 1000).toFixed(2);
+            })
+            .catch(e => showMessage('计算错误: ' + e.message, 'error'))
+            .finally(() => {
+                btn.disabled = false;
+                btn.textContent = '🧮 计算概率';
+            });
+        }
+        
+        function displayResults(data) {
+            const panel = document.getElementById('results');
+            const content = document.getElementById('results-content');
+            
+            if (data.error) {
+                content.innerHTML = `<div class="error">❌ ${data.error}</div>`;
+                panel.style.display = 'block';
+                return;
+            }
+            
+            let html = `<div style="margin-bottom:15px;padding:10px;background:#e8f4f8;border-radius:6px;">
+                <strong>模拟次数:</strong> ${parseInt(data.simulations).toLocaleString()} 次
+            </div>`;
+            
+            const players = Object.keys(data.result).map(k => ({
+                id: k, num: parseInt(k.replace('player', '')), ...data.result[k]
+            })).sort((a, b) => b.equity - a.equity);
+            
+            players.forEach((p, i) => {
+                const isWinner = i === 0;
+                html += `
+                    <div class="player-result" style="${isWinner ? 'border-left-color:#27ae60;' : ''}">
+                        <div class="player-header">
+                            <span class="player-name">玩家 ${p.num} ${isWinner ? '👑' : ''}</span>
+                            <span>${playerHands[p.num] ? formatCards(playerHands[p.num]) : '无'}</span>
+                        </div>
+                        <div class="equity-bar">
+                            <div class="bar-fill" style="width:${p.equity}%">${p.equity}%</div>
+                        </div>
+                        <div class="player-stats">
+                            <div class="stat"><span class="stat-label">胜率</span><span class="stat-value win">${p.win}%</span></div>
+                            <div class="stat"><span class="stat-label">平局</span><span class="stat-value tie">${p.tie}%</span></div>
+                            <div class="stat"><span class="stat-label">权益</span><span class="stat-value equity">${p.equity}%</span></div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            content.innerHTML = html;
+            panel.style.display = 'block';
+            panel.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // ============ Outs 计算 ============
+        function calculateOuts() {
+            const numPlayers = parseInt(document.getElementById('num_players').value);
+            
+            // 验证
+            if (boardCards.length !== 4) {
+                showMessage('转牌圈需要4张公共牌', 'error');
+                return;
+            }
+            
+            for (let i = 1; i <= numPlayers; i++) {
+                if (!playerHands[i]) {
+                    showMessage(`请为玩家 ${i} 设置手牌`, 'error');
+                    return;
+                }
+            }
+            
+            const btn = document.getElementById('outs-btn');
+            btn.disabled = true;
+            btn.textContent = '⏳ 分析中...';
+            
+            // 为每个玩家计算Outs
+            const outsResults = [];
+            const promises = [];
+            
+            for (let playerNum = 1; playerNum <= numPlayers; playerNum++) {
+                const opponentHands = [];
+                for (let i = 1; i <= numPlayers; i++) {
+                    if (i !== playerNum && playerHands[i]) {
+                        opponentHands.push(playerHands[i]);
+                    }
+                }
+                
+                const promise = fetch('/calculate_outs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        player_hand: playerHands[playerNum],
+                        board: boardCards.join(''),
+                        opponent_hands: opponentHands,
+                        simulations: 2000
+                    })
+                })
+                .then(r => r.json())
+                .then(result => {
+                    if (result.success) {
+                        outsResults.push({ playerNum, ...result.outs });
+                    }
+                });
+                
+                promises.push(promise);
+            }
+            
+            Promise.all(promises).then(() => {
+                displayOutsResults(outsResults);
+                btn.disabled = false;
+                btn.textContent = '🎯 计算Outs';
+            });
+        }
+        
+        function displayOutsResults(results) {
+            const panel = document.getElementById('outs-results');
+            
+            // 找出Outs最多的玩家（通常是最需要帮助的）
+            const maxOuts = results.reduce((max, r) => r.outs_count > max.outs_count ? r : max, results[0]);
+            
+            document.getElementById('outs-count').textContent = maxOuts.outs_count;
+            document.getElementById('outs-percentage').textContent = maxOuts.outs_percentage + '%';
+            
+            // 显示Outs牌
+            const cardsContainer = document.getElementById('outs-cards');
+            if (maxOuts.outs_cards && maxOuts.outs_cards.length > 0) {
+                cardsContainer.innerHTML = maxOuts.outs_cards.map((c, i) => 
+                    `<div class="out-card" style="background:${getSuitColor(c[1])};animation-delay:${i*0.05}s;">
+                        <div>${c[0]}</div>
+                        <div>${getSuitSymbol(c[1])}</div>
+                    </div>`
+                ).join('');
+            } else {
+                cardsContainer.innerHTML = '<div style="color:#6c757d;font-style:italic;">暂无Outs（可能已经领先或牌力差距过大）</div>';
+            }
+            
+            // 显示详细分析
+            const detailsContainer = document.getElementById('outs-details');
+            let detailsHtml = '<h4 style="margin-bottom:10px;">各玩家Outs详情</h4>';
+            
+            results.forEach(r => {
+                const hand = playerHands[r.playerNum];
+                detailsHtml += `
+                    <div class="outs-detail-item">
+                        <div>
+                            <strong>玩家 ${r.playerNum}</strong> 
+                            <span style="margin-left:10px;">${hand ? formatCards(hand) : '无'}</span>
+                        </div>
+                        <div style="text-align:right;">
+                            <span style="font-size:1.2em;font-weight:bold;color:#e67e22;">${r.outs_count} Outs</span>
+                            <span style="color:#6c757d;margin-left:10px;">当前胜率: ${r.current_equity}%</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            detailsContainer.innerHTML = detailsHtml;
+            panel.style.display = 'block';
+            panel.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // ============ 工具函数 ============
+        function resetCalculator() {
+            usedCards.clear();
+            playerHands = {};
+            boardCards = [];
+            initializeHands();
+            updateBoardDisplay();
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('outs-results').style.display = 'none';
+            document.getElementById('calc_time').textContent = '-';
+            showMessage('计算器已重置', 'info');
+        }
+        
+        function showMessage(msg, type) {
+            const existing = document.querySelector('.message');
+            if (existing) existing.remove();
+            
+            const div = document.createElement('div');
+            div.className = `message message-${type}`;
+            div.textContent = msg;
+            document.body.appendChild(div);
+            
+            setTimeout(() => div.remove(), 3000);
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>
